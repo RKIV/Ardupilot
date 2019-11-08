@@ -182,10 +182,32 @@ void Copter::autonomous_run()
     }
 }
 
+#define AUTON_VERSION_NUM 1.1;
+
 // autonomous_controller - computes target climb rate, roll, pitch, and yaw rate for autonomous flight mode
 // returns true to continue flying, and returns false to land
 bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll, float &target_pitch, float &target_yaw_rate)
 {
+
+    // PARAM 1: How close to ge to the front wall
+    // PARAM 2: How lose to get to walls when holding left and right
+    // PARAM 3: How long to hold each state
+
+    enum States
+    {
+        HOLD_CENTER,
+        HOLD_RIGHT,
+        HOLD_LEFT,
+        MOVING_FORWARD
+    };
+
+    static States state = HOLD_CENTER;
+
+    static int stateCounter = 0;
+
+    static float moveForwardRightHold = 0;
+    static float moveForwardLeftHold = 0;
+    
     // get downward facing sensor reading in meters
     float rangefinder_alt = (float)rangefinder_state.alt_cm / 100.0f;
 
@@ -205,19 +227,79 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
 	g.pid_pitch.set_input_filter_all (g.e100_param1 - dist_forward);
 	target_pitch = 100.0f * g.pid_pitch.get_pid();
 
-	g.pid_roll.set_input_filter_all( dist_right-dist_left );
-	target_roll =  100.0f * g.pid_roll.get_pid();
+    // If we can move forward and we take the oppurtunity and try to hold horizontal pos
+    if(abs(g.e100_param1 - dist_forward) > 20 && state!=MOVING_FORWARD)
+    {
+        state = MOVING_FORWARD
+        moveForwardRightHold = dist_right;
+        moveForwardLeftHold = dist_left;
+    }
+    // When we get out of moving forward, center again
+    else if(state == MOVING_FORWARD)
+        state = HOLD_CENTER;
+    else
+        state = state;
+    switch(state)
+    {
+        case HOLD_CENTER:
+            g.pid_roll.set_input_filter_all( dist_right-dist_left );
+            if(stateCounter > g.e100_param3 * 400)
+            {
+                state = HOLD_RIGHT;
+                stateCounter = 0;
+            }
+            stateCounter++;
+            break;
+        case HOLD_RIGHT:
+            g.pid_roll.set_input_filer_all(dist_right - g.e200_param2);
+            if(stateCounter > g.e100_param3 * 400)
+            {
+                state = HOLD_LEFT;
+                stateCounter = 0;
+            }
+            stateCounter++;
+            break;
+        case HOLD_LEFT:
+            g.pid_roll.set_input_filer_all(g.e200_param2 - dist_left);
+            if(stateCounter > g.e100_param3 * 400)
+            {
+                state = HOLD_CENTER;
+                stateCounter = 0;
+            }
+            stateCounter++;
+            break;
+        case MOVING_FORWARD:
+            g.pid_roll.set_input_filter_all((dist_right - moveForwardRightHold) + 
+                                            (moveForwardLeftHold - dist_left))
+            break;
+    }
+	
+    target_roll =  100.0f * g.pid_roll.get_pid();
+
 
     // set desired yaw rate in centi-degrees per second (set to zero to hold constant heading)
     target_yaw_rate = 0.0f;
 
-	// send logging messages to Mission Planner once every second because 400
+	// send logging messages to Mission Planner once every half-second because 400 is one second
 	static int counter = 0;
-	if (counter++ > 400) {
-		gcs_send_text(MAV_SEVERITY_INFO, "autonomous flight mode for Intelligent Flight");
+	if (counter++ > 200) {
+        char string[80] = "Autonomous Flight Version: AUTON_VERSION_NUM - Intelligent Flight: \n";
+        switch(state){
+            case HOLD_CENTER:
+                strcat(string, "HOLD_CENTER")
+                break;
+            case HOLD_RIGHT:
+                strcat(string, "HOLD_RIGHT")
+                break;
+            case HOLD_LEFT:
+                strcat(string, "HOLD_LEFT")
+                break;
+            case MOVING_FORWARD:
+                str(string, "MOVING_FORWARD")
+                break;
+        }
+		gcs_send_text(MAV_SEVERITY_INFO, string);
 		counter = 0;
 	}
-
-
     return true;
 }
