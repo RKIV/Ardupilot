@@ -200,11 +200,24 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
     target_climb_rate = 0.0f;
 
     // set desired roll and pitch in centi-degrees
-    target_pitch = 0.0f;
-    target_roll = 0.0f;
+    // Old target_pitch: 
+	//target_pitch = 0.0f;
+	g.pid_pitch.set_input_filter_all (g.e100_param1 - dist_forward);
+	target_pitch = 100.0f * g.pid_pitch.get_pid();
+
+	g.pid_roll.set_input_filter_all( dist_right-dist_left );
+	target_roll =  100.0f * g.pid_roll.get_pid();
 
     // set desired yaw rate in centi-degrees per second (set to zero to hold constant heading)
     target_yaw_rate = 0.0f;
+
+	// send logging messages to Mission Planner once every second because 400
+	static int counter = 0;
+	if (counter++ > 400) {
+		gcs_send_text(MAV_SEVERITY_INFO, "autonomous flight mode for Intelligent Flight");
+		counter = 0;
+	}
+
 
     return true;
 }
