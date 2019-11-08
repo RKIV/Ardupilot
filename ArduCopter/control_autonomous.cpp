@@ -182,7 +182,7 @@ void Copter::autonomous_run()
     }
 }
 
-#define AUTON_VERSION_NUM 1.1;
+#define AUTON_VERSION_NUM 0.2;
 
 // autonomous_controller - computes target climb rate, roll, pitch, and yaw rate for autonomous flight mode
 // returns true to continue flying, and returns false to land
