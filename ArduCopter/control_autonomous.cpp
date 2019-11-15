@@ -235,9 +235,9 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
             Log_Write_Event(DATA_GRIPPER_RELEASE);
             gripperOpen = false;
         }
-        else if(rangefinder_alt > 0.2 ** !gripperOpen)
+        else if(rangefinder_alt > 0.2 && !gripperOpen)
         {
-            g2.gripper.realease();
+            g2.gripper.release();
             Log_Write_Event(DATA_GRIPPER_RELEASE);
             gripperOpen = true;
         }
@@ -254,12 +254,12 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
     // If we can move forward and we take the oppurtunity and try to hold horizontal pos
     if(abs(g.e100_param1 - dist_forward) > 20 && state!=MOVING_FORWARD)
     {
-        state = MOVING_FORWARD
+        state = MOVING_FORWARD;
         moveForwardRightHold = dist_right;
         moveForwardLeftHold = dist_left;
     }
     // When we get out of moving forward, center again
-    else if(g.e100_param1 - dist_forward) < 20 && state == MOVING_FORWARD)
+    else if(abs(g.e100_param1 - dist_forward) < 20 && state == MOVING_FORWARD)
         state = HOLD_CENTER;
 
     // State machine
@@ -275,7 +275,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
             stateCounter++;
             break;
         case HOLD_RIGHT:
-            g.pid_roll.set_input_filer_all(dist_right - g.e200_param2);
+            g.pid_roll.set_input_filter_all(dist_right - g.e100_param2);
             if(stateCounter > g.e100_param3 * 400)
             {
                 state = HOLD_LEFT;
@@ -284,7 +284,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
             stateCounter++;
             break;
         case HOLD_LEFT:
-            g.pid_roll.set_input_filer_all(g.e200_param2 - dist_left);
+            g.pid_roll.set_input_filter_all(g.e100_param2 - dist_left);
             if(stateCounter > g.e100_param3 * 400)
             {
                 state = HOLD_CENTER;
@@ -294,7 +294,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
             break;
         case MOVING_FORWARD:
             g.pid_roll.set_input_filter_all((dist_right - moveForwardRightHold) + 
-                                            (moveForwardLeftHold - dist_left))
+                                            (moveForwardLeftHold - dist_left));
             break;
     }
 	
@@ -310,16 +310,16 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
         char string[80] = "Autonomous Flight Version: AUTON_VERSION_NUM - Intelligent Flight: \n";
         switch(state){
             case HOLD_CENTER:
-                strcat(string, "HOLD_CENTER")
+                strcat(string, "HOLD_CENTER");
                 break;
             case HOLD_RIGHT:
-                strcat(string, "HOLD_RIGHT")
+                strcat(string, "HOLD_RIGHT");
                 break;
             case HOLD_LEFT:
-                strcat(string, "HOLD_LEFT")
+                strcat(string, "HOLD_LEFT");
                 break;
             case MOVING_FORWARD:
-                str(string, "MOVING_FORWARD")
+                strcat(string, "MOVING_FORWARD");
                 break;
         }
 		gcs_send_text(MAV_SEVERITY_INFO, string);
