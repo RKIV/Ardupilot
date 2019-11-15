@@ -192,7 +192,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
     // PARAM 1: How close to ge to the front wall
     // PARAM 2: How lose to get to walls when holding left and right
     // PARAM 3: How long to hold each state
-    // PARAM 4: 0 For Test Gripper Mode, anything else for regular flight
+    // PARAM 4: Non zero grip testing
     
 
     enum States
@@ -226,7 +226,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
     static bool gripperOpen = false;
 
     // Stuff For Testing Gripper if in testing mode
-    if(g.e100_param4 == 0)
+    if(g.e100_param4 != 0)
     {
 
         if(rangefinder_alt < 0.2 && gripperOpen)
