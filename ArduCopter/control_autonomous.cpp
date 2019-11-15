@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Copter.h"
+#include <string>
 
 using namespace std;
 
@@ -224,22 +225,26 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
     target_climb_rate = 0.0f;
 
     static bool gripperOpen = false;
+    static int gripCounter = 0;
 
     // Stuff For Testing Gripper if in testing mode
     if(g.e100_param4 != 0)
     {
+	gripCounter ++;
 
-        if(rangefinder_alt < 0.2 && gripperOpen)
+        if(gripCounter > 400 && gripperOpen)
         {
             g2.gripper.grab();
             Log_Write_Event(DATA_GRIPPER_RELEASE);
             gripperOpen = false;
+		gripCounter = 0;
         }
-        else if(rangefinder_alt > 0.2 && !gripperOpen)
+        else if(gripCounter > 400 && !gripperOpen)
         {
             g2.gripper.release();
             Log_Write_Event(DATA_GRIPPER_RELEASE);
             gripperOpen = true;
+		gripCounter = 0;
         }
     }
 
@@ -307,22 +312,24 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
 	// send logging messages to Mission Planner once every half-second because 400 is one second
 	static int counter = 0;
 	if (counter++ > 200) {
-        char string[80] = "Autonomous Flight Version: AUTON_VERSION_NUM - Intelligent Flight: \n";
+        string str = "Autonomous Flight Version: 0.3 - Intelligent Flight: \n";
         switch(state){
             case HOLD_CENTER:
-                strcat(string, "HOLD_CENTER");
+                str+= "HOLD_CENTER";
                 break;
             case HOLD_RIGHT:
-                strcat(string, "HOLD_RIGHT");
+                str += "HOLD_RIGHT";
                 break;
             case HOLD_LEFT:
-                strcat(string, "HOLD_LEFT");
+                str += "HOLD_LEFT";
                 break;
             case MOVING_FORWARD:
-                strcat(string, "MOVING_FORWARD");
-                break;
+		str +=  "MOVING_FORWARD";
+	    default:
+		str += "Default";
+		break;
         }
-		gcs_send_text(MAV_SEVERITY_INFO, string);
+		gcs_send_text_fmt(MAV_SEVERITY_INFO, "%s", str);
 		counter = 0;
 	}
     return true;
