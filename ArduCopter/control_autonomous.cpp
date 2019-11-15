@@ -235,10 +235,10 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
         moveForwardLeftHold = dist_left;
     }
     // When we get out of moving forward, center again
-    else if(state == MOVING_FORWARD)
+    else if(g.e100_param1 - dist_forward) < 20 && state == MOVING_FORWARD)
         state = HOLD_CENTER;
-    else
-        state = state;
+
+    // State machine
     switch(state)
     {
         case HOLD_CENTER:
