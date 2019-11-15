@@ -192,6 +192,8 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
     // PARAM 1: How close to ge to the front wall
     // PARAM 2: How lose to get to walls when holding left and right
     // PARAM 3: How long to hold each state
+    // PARAM 4: 0 For Test Gripper Mode, anything else for regular flight
+    
 
     enum States
     {
@@ -220,6 +222,28 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
 
     // set desired climb rate in centimeters per second
     target_climb_rate = 0.0f;
+
+    static bool gripperOpen = false;
+
+    // Stuff For Testing Gripper if in testing mode
+    if(g.e100_param4 == 0)
+    {
+
+        if(rangefinder_alt < 0.2 && gripperOpen)
+        {
+            g2.gripper.grab();
+            Log_Write_Event(DATA_GRIPPER_RELEASE);
+            gripperOpen = false;
+        }
+        else if(rangefinder_alt > 0.2 ** !gripperOpen)
+        {
+            g2.gripper.realease();
+            Log_Write_Event(DATA_GRIPPER_RELEASE);
+            gripperOpen = true;
+        }
+    }
+
+
 
     // set desired roll and pitch in centi-degrees
     // Old target_pitch: 
