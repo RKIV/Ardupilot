@@ -1,6 +1,5 @@
 #include <iostream>
 #include "Copter.h"
-#include <string>
 
 using namespace std;
 
@@ -312,24 +311,24 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
 	// send logging messages to Mission Planner once every half-second because 400 is one second
 	static int counter = 0;
 	if (counter++ > 200) {
-        string str = "Autonomous Flight Version: 0.3 - Intelligent Flight: \n";
+        char str[100] = "Autonomous Flight Version: 0.3 - Intelligent Flight: \n";
         switch(state){
             case HOLD_CENTER:
-                str+= "HOLD_CENTER";
+                strcat(str, "HOLD_CENTER");
                 break;
             case HOLD_RIGHT:
-                str += "HOLD_RIGHT";
+                strcat(str, "HOLD_RIGHT");
                 break;
             case HOLD_LEFT:
-                str += "HOLD_LEFT";
+                strcat(str, "HOLD_LEFT");
                 break;
             case MOVING_FORWARD:
-		str +=  "MOVING_FORWARD";
-	    default:
-		str += "Default";
+		        strcat(strc, "MOVING_FORWARD");
+            default:
+                strcat(str, "Default");
 		break;
         }
-		gcs_send_text_fmt(MAV_SEVERITY_INFO, "%s", str);
+		gcs_send_text(MAV_SEVERITY_INFO, str);
 		counter = 0;
 	}
     return true;
