@@ -197,6 +197,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
 
     enum States
     {
+        HOLD_CLOSE,
         HOLD_CENTER,
         HOLD_RIGHT,
         HOLD_LEFT,
@@ -311,23 +312,25 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
 	// send logging messages to Mission Planner once every half-second because 400 is one second
 	static int counter = 0;
 	if (counter++ > 200) {
-        char str[100] = "Autonomous Flight Version: 0.3 - Intelligent Flight: \n";
+        char str[100] = "AF Vers: 0.4 - IF: \n";
         switch(state){
             case HOLD_CENTER:
-                strcat(str, "HOLD_CENTER");
+                strcat(str, "HC ");
                 break;
             case HOLD_RIGHT:
-                strcat(str, "HOLD_RIGHT");
+                strcat(str, "HR ");
                 break;
             case HOLD_LEFT:
-                strcat(str, "HOLD_LEFT");
+                strcat(str, "HL ");
                 break;
             case MOVING_FORWARD:
-		        strcat(strc, "MOVING_FORWARD");
+		        strcat(str, "MF ");
             default:
-                strcat(str, "Default");
+                strcat(str, "Dft ");
 		break;
         }
+        strcat(str, target_pitch);
+        strcat(str, target_roll);
 		gcs_send_text(MAV_SEVERITY_INFO, str);
 		counter = 0;
 	}
