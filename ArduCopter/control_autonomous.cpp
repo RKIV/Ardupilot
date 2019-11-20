@@ -189,8 +189,8 @@ void Copter::autonomous_run()
 bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll, float &target_pitch, float &target_yaw_rate)
 {
 
-    // PARAM 1: How close to ge to the front wall
-    // PARAM 2: How lose to get to walls when holding left and right
+    // PARAM 1: How close to get to the front wall
+    // PARAM 2: How close to get to walls when holding left and right
     // PARAM 3: How long to hold each state
     // PARAM 4: Non zero grip testing
     
@@ -206,7 +206,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
 
     static States state = HOLD_CENTER;
 
-    static int stateCounter = 0;
+    static int stateCounter = 0;    //CY: wouldn't this set it to 0 every iter of the 'while loop' ?
 
     static float moveForwardRightHold = 0;
     static float moveForwardLeftHold = 0;
@@ -257,6 +257,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
 	target_pitch = 100.0f * g.pid_pitch.get_pid();
 
     // If we can move forward and we take the oppurtunity and try to hold horizontal pos
+    // CY: if the wall is 10 away, param1 is 50, the abs(diff) is still > 20 but drone would cont. to go forward, which is undesirable
     if(abs(g.e100_param1 - dist_forward) > 20 && state!=MOVING_FORWARD)
     {
         state = MOVING_FORWARD;
@@ -264,7 +265,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
         moveForwardLeftHold = dist_left;
     }
     // When we get out of moving forward, center again
-    else if(abs(g.e100_param1 - dist_forward) < 20 && state == MOVING_FORWARD)
+    else if(abs(g.e100_param1 - dist_forward) < 20 && state == MOVING_FORWARD)  //CY: maybe change this to an else
         state = HOLD_CENTER;
 
     // State machine
@@ -277,7 +278,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
                 state = HOLD_RIGHT;
                 stateCounter = 0;
             }
-            stateCounter++;
+            stateCounter++; //CY: perhaps pull this out, for simplicity
             break;
         case HOLD_RIGHT:
             g.pid_roll.set_input_filter_all(dist_right - g.e100_param2);
