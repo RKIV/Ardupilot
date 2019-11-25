@@ -197,10 +197,8 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
 
     enum States
     {
-        HOLD_CENTER,
         HOLD_RIGHT,
         HOLD_LEFT,
-        MOVING_FORWARD
     };
 
     static States state = MOVING_FORWARD;
@@ -256,67 +254,30 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
 	g.pid_pitch.set_input_filter_all (g.e100_param1 - dist_forward);
 	target_pitch = 100.0f * g.pid_pitch.get_pid();
 
-    // If we can move forward and we take the oppurtunity and try to hold horizontal pos
-
-    // When we get out of moving forward, center again
-    if(dist_forward - g.e100_param1 < 20 && state == MOVING_FORWARD)
-        state = HOLD_CENTER;
 
     // State machine
     switch(state)
     {
-        case HOLD_CENTER:
-            g.pid_roll.set_input_filter_all( dist_right-dist_left );
-            if(stateCounter > g.e100_param3 * 400)
-            {
-                state = HOLD_LEFT;
-                stateCounter = 0;
-            }
-            stateCounter++;
-            break;
         case HOLD_RIGHT:
             g.pid_roll.set_input_filter_all(dist_right - g.e100_param2);
             if(stateCounter > g.e100_param3 * 400)
             {
-                if(dist_forward - g.e100_param1 > 20)
-                {
-                    state = MOVING_FORWARD;
-                    moveForwardRightHold = dist_right;
-                    moveForwardLeftHold = dist_left;
-                }
-		else
-		{
-                state = HOLD_CENTER;
-		}
-		stateCounter = 0;
+                state = HOLD_LEFT;
+		        stateCounter = 0;
             }
             stateCounter++;
             break;
         case HOLD_LEFT:
             loopCounter++;
-            if(loopCounter >= 3)
-                return false;
+            // if(loopCounter >= 3)
+            //     return false;
             g.pid_roll.set_input_filter_all(g.e100_param2 - dist_left);
             if(stateCounter > g.e100_param3 * 400)
             {
-                if(dist_forward - g.e100_param1 > 20)
-                {
-                    state = MOVING_FORWARD;
-                    moveForwardRightHold = dist_right;
-                    moveForwardLeftHold = dist_left;
-                }
-		else
-		{
                 state = HOLD_RIGHT;
-		}
                 stateCounter = 0;
             }
             stateCounter++;
-            break;
-        case MOVING_FORWARD:
-            loopCounter = 0;
-            g.pid_roll.set_input_filter_all((dist_right - moveForwardRightHold) + 
-                                            (moveForwardLeftHold - dist_left));
             break;
     }
 	
