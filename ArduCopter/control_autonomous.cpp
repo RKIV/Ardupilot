@@ -204,12 +204,9 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
         MOVING_FORWARD
     };
 
-    static States state = HOLD_CENTER;
+    static States state = MOVE_FORWARD;
 
     static int stateCounter = 0;
-
-    static float moveForwardRightHold = 0;
-    static float moveForwardLeftHold = 0;
     
     // get downward facing sensor reading in meters
     float rangefinder_alt = (float)rangefinder_state.alt_cm / 100.0f;
@@ -220,6 +217,9 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
     g2.proximity.get_horizontal_distance(90, dist_right);
     g2.proximity.get_horizontal_distance(180, dist_backward);
     g2.proximity.get_horizontal_distance(270, dist_left);
+
+    static float moveForwardRightHold = dist_right;
+    static float moveForwardLeftHold = dist_left;
 
     // set desired climb rate in centimeters per second
     target_climb_rate = 0.0f;
@@ -257,14 +257,9 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
 	target_pitch = 100.0f * g.pid_pitch.get_pid();
 
     // If we can move forward and we take the oppurtunity and try to hold horizontal pos
-    if(abs(g.e100_param1 - dist_forward) > 20 && state!=MOVING_FORWARD)
-    {
-        state = MOVING_FORWARD;
-        moveForwardRightHold = dist_right;
-        moveForwardLeftHold = dist_left;
-    }
+
     // When we get out of moving forward, center again
-    else if(abs(g.e100_param1 - dist_forward) < 20 && state == MOVING_FORWARD)
+    else if(dist_forward - g.e100_param1 < 20 && state == MOVING_FORWARD)
         state = HOLD_CENTER;
 
     // State machine
@@ -283,6 +278,12 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
             g.pid_roll.set_input_filter_all(dist_right - g.e100_param2);
             if(stateCounter > g.e100_param3 * 400)
             {
+                if(dist_forward - g.e100_param1 > 20)
+                {
+                    state = MOVING_FORWARD;
+                    moveForwardRightHold = dist_right;
+                    moveForwardLeftHold = dist_left;
+                }
                 state = HOLD_LEFT;
                 stateCounter = 0;
             }
@@ -292,6 +293,12 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
             g.pid_roll.set_input_filter_all(g.e100_param2 - dist_left);
             if(stateCounter > g.e100_param3 * 400)
             {
+                if(dist_forward - g.e100_param1 > 20)
+                {
+                    state = MOVING_FORWARD;
+                    moveForwardRightHold = dist_right;
+                    moveForwardLeftHold = dist_left;
+                }
                 state = HOLD_CENTER;
                 stateCounter = 0;
             }
