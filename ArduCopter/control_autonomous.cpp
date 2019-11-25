@@ -206,6 +206,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
     static States state = MOVING_FORWARD;
 
     static int stateCounter = 0;
+    static int loopCounter = 0;
     
     // get downward facing sensor reading in meters
     float rangefinder_alt = (float)rangefinder_state.alt_cm / 100.0f;
@@ -292,6 +293,9 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
             stateCounter++;
             break;
         case HOLD_LEFT:
+            loopCounter++;
+            if(loopCounter >= 3)
+                return false;
             g.pid_roll.set_input_filter_all(g.e100_param2 - dist_left);
             if(stateCounter > g.e100_param3 * 400)
             {
@@ -310,6 +314,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
             stateCounter++;
             break;
         case MOVING_FORWARD:
+            loopCounter = 0;
             g.pid_roll.set_input_filter_all((dist_right - moveForwardRightHold) + 
                                             (moveForwardLeftHold - dist_left));
             break;
