@@ -241,8 +241,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
         }
         else if(gripCounter > 400 && !gripperOpen)
         {
-            g2.gripper.release();
-            Log_Write_Event(DATA_GRIPPER_RELEASE);
+            
             gripperOpen = true;
 		gripCounter = 0;
         }
@@ -295,7 +294,12 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
         case HOLD_LEFT:
             loopCounter++;
             if(loopCounter >= 3)
+            {
+                g2.gripper.release();
+                Log_Write_Event(DATA_GRIPPER_RELEASE);
                 return false;
+            }
+
             g.pid_roll.set_input_filter_all(g.e100_param2 - dist_left);
             if(stateCounter > g.e100_param3 * 400)
             {
