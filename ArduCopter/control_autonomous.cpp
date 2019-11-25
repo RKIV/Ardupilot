@@ -203,7 +203,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
         MOVING_FORWARD
     };
 
-    static States state = MOVE_FORWARD;
+    static States state = MOVING_FORWARD;
 
     static int stateCounter = 0;
     
@@ -258,7 +258,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
     // If we can move forward and we take the oppurtunity and try to hold horizontal pos
 
     // When we get out of moving forward, center again
-    else if(dist_forward - g.e100_param1 < 20 && state == MOVING_FORWARD)
+    if(dist_forward - g.e100_param1 < 20 && state == MOVING_FORWARD)
         state = HOLD_CENTER;
 
     // State machine
@@ -268,7 +268,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
             g.pid_roll.set_input_filter_all( dist_right-dist_left );
             if(stateCounter > g.e100_param3 * 400)
             {
-                state = HOLD_RIGHT;
+                state = HOLD_LEFT;
                 stateCounter = 0;
             }
             stateCounter++;
@@ -283,8 +283,11 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
                     moveForwardRightHold = dist_right;
                     moveForwardLeftHold = dist_left;
                 }
-                state = HOLD_LEFT;
-                stateCounter = 0;
+		else
+		{
+                state = HOLD_CENTER;
+		}
+		stateCounter = 0;
             }
             stateCounter++;
             break;
@@ -298,7 +301,10 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
                     moveForwardRightHold = dist_right;
                     moveForwardLeftHold = dist_left;
                 }
-                state = HOLD_CENTER;
+		else
+		{
+                state = HOLD_RIGHT;
+		}
                 stateCounter = 0;
             }
             stateCounter++;
