@@ -201,7 +201,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
         HOLD_LEFT,
     };
 
-    static States state = MOVING_FORWARD;
+    static States state = HOLD_LEFT;
 
     static int stateCounter = 0;
     static int loopCounter = 0;
@@ -215,9 +215,6 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
     g2.proximity.get_horizontal_distance(90, dist_right);
     g2.proximity.get_horizontal_distance(180, dist_backward);
     g2.proximity.get_horizontal_distance(270, dist_left);
-
-    static float moveForwardRightHold = dist_right;
-    static float moveForwardLeftHold = dist_left;
 
     // set desired climb rate in centimeters per second
     target_climb_rate = 0.0f;
@@ -292,17 +289,12 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
 	if (counter++ > 200) {
         char str[100] = "AF Vers: 0.4 - IF: \n";
         switch(state){
-            case HOLD_CENTER:
-                strcat(str, "HC ");
-                break;
             case HOLD_RIGHT:
                 strcat(str, "HR ");
                 break;
             case HOLD_LEFT:
                 strcat(str, "HL ");
                 break;
-            case MOVING_FORWARD:
-		        strcat(str, "MF ");
             default:
                 strcat(str, "Dft ");
 		break;
