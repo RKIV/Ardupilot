@@ -197,7 +197,6 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
 
     enum States
     {
-        HOLD_CLOSE,
         HOLD_CENTER,
         HOLD_RIGHT,
         HOLD_LEFT,
@@ -329,8 +328,8 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
                 strcat(str, "Dft ");
 		break;
         }
-        strcat(str, target_pitch);
-        strcat(str, target_roll);
+        // strcat(str, target_pitch);
+        // strcat(str, target_roll);
 		gcs_send_text(MAV_SEVERITY_INFO, str);
 		counter = 0;
 	}
