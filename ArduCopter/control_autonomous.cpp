@@ -200,10 +200,12 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
         HOLD_CENTER,
         HOLD_RIGHT,
         HOLD_LEFT,
-        MOVING_FORWARD
+        MOVING_FORWARD,
+        MOVING_BACKWARD
     };
 
     static States state = MOVING_FORWARD;
+    static bool havePackage = true;
 
     static int stateCounter = 0;
     static int loopCounter = 0;
@@ -253,7 +255,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
     // set desired roll and pitch in centi-degrees
     // Old target_pitch: 
 	//target_pitch = 0.0f;
-	g.pid_pitch.set_input_filter_all (g.e100_param1 - dist_forward);
+	g.pid_pitch.set_input_filter_all (g.e100_param1 - (havePackage ? dist_forward : dist_backward));
 	target_pitch = 100.0f * g.pid_pitch.get_pid();
 
     // If we can move forward and we take the oppurtunity and try to hold horizontal pos
@@ -278,7 +280,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
             g.pid_roll.set_input_filter_all(dist_right - g.e100_param2);
             if(stateCounter > g.e100_param3 * 400)
             {
-                if(dist_forward - g.e100_param1 > 20)
+                if((havePackage ? dist_forward : dist_backward) - g.e100_param1 > 20)
                 {
                     state = MOVING_FORWARD;
                     moveForwardRightHold = dist_right;
@@ -299,7 +301,7 @@ bool Copter::autonomous_controller(float &target_climb_rate, float &target_roll,
             g.pid_roll.set_input_filter_all(g.e100_param2 - dist_left);
             if(stateCounter > g.e100_param3 * 400)
             {
-                if(dist_forward - g.e100_param1 > 20)
+                if((havePackage ? dist_forward : dist_backward) - g.e100_param1 > 20)
                 {
                     state = MOVING_FORWARD;
                     moveForwardRightHold = dist_right;
